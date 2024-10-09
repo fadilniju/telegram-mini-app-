@@ -46,7 +46,12 @@ export default function ExampleProfile() {
   const [prompt, setPrompt] = useState('')
   const [generationModel, setGenerationModel] = useState('stable-diffusion')
   const [nftActiveTab, setNftActiveTab] = useState('collection')
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<{
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  photo_url?: string;
+} | null>(null);
   const [level] = useState(0)
   const [experience] = useState(0)
 
