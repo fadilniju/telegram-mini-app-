@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Star, Zap, User, ShoppingBag, Image, Palette, Search, Gift } from 'lucide-react'
+import { Star, Zap, User, ShoppingBag, Image as ImageIcon, Palette, Search, Gift } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
@@ -38,7 +39,7 @@ declare global {
   }
 }
 
-export function ExampleProfileRu() {
+export default function ExampleProfile() {
   const [activeTab, setActiveTab] = useState('profile')
   const [modelSize, setModelSize] = useState('512x512')
   const [imageCount, setImageCount] = useState(1)
@@ -46,8 +47,8 @@ export function ExampleProfileRu() {
   const [generationModel, setGenerationModel] = useState('stable-diffusion')
   const [nftActiveTab, setNftActiveTab] = useState('collection')
   const [user, setUser] = useState(null)
-  const [level, setLevel] = useState(0)
-  const [experience, setExperience] = useState(0)
+  const [level] = useState(0)
+  const [experience] = useState(0)
 
   useEffect(() => {
     const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
@@ -166,12 +167,19 @@ export function ExampleProfileRu() {
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-xl font-semibold mb-4 flex items-center">
-                  <Image className="w-6 h-6 mr-2 text-blue-500" />
+                  <ImageIcon className="w-6 h-6 mr-2 text-blue-500" />
                   Галерея
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   {generatedImages.map((image, index) => (
-                    <img key={index} src={image} alt={`Сгенерированное ${index + 1}`} className="w-full h-auto rounded-lg shadow-md" />
+                    <Image 
+                      key={index} 
+                      src={image} 
+                      alt={`Сгенерированное изображение ${index + 1}`} 
+                      width={100} 
+                      height={100}
+                      className="w-full h-auto rounded-lg shadow-md" 
+                    />
                   ))}
                 </div>
               </CardContent>
@@ -284,7 +292,7 @@ export function ExampleProfileRu() {
                           <div className="w-12 h-12 bg-gray-200 rounded-lg mr-4"></div>
                           <div>
                             <span className="font-medium">{item.name}</span>
-                            <p className="text-sm text-gray-500">Создатель: {item.creator}</p>
+                            <p className="text-sm  text-gray-500">Создатель: {item.creator}</p>
                           </div>
                         </div>
                         <Button size="sm">{item.price}</Button>
@@ -297,7 +305,7 @@ export function ExampleProfileRu() {
           </Card>
         );
       default:
-        return  null;
+        return null;
     }
   };
 
@@ -327,7 +335,7 @@ export function ExampleProfileRu() {
             onClick={() => setActiveTab('generator')}
             className="flex flex-col items-center"
           >
-            <Image className="h-6 w-6" />
+            <ImageIcon className="h-6 w-6" />
             <span className="text-xs mt-1">Генератор</span>
           </Button>
           <Button
