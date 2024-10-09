@@ -55,12 +55,18 @@ export default function ExampleProfile() {
   const [level] = useState(0)
   const [experience] = useState(0)
 
-  useEffect(() => {
+ useEffect(() => {
+  // Проверяем, существует ли объект Telegram и его свойства перед их использованием
+  if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
     const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
     if (telegramUser) {
       setUser(telegramUser);
     }
-  }, []);
+  } else {
+    console.error('Telegram WebApp is not available or initDataUnsafe is undefined.');
+  }
+}, []);
+
 
   const generatedImages = [
     "/placeholder.svg?height=100&width=100&text=Изображение1",
