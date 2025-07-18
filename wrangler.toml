@@ -1,0 +1,15 @@
+# This is the configuration file for Cloudflare Workers and Pages.
+# It provides explicit instructions for the build environment.
+
+# The name of your application.
+# You can change this to match your Cloudflare Pages project name for clarity.
+name = "telegram-mini-app"
+
+# Sets the compatibility date for the Workers runtime.
+# This ensures that your project uses a stable version of the runtime APIs.
+compatibility_date = "2024-07-18"
+
+# This is the most important part.
+# It explicitly enables the Node.js compatibility flag required by your Next.js app.
+[vars]
+compatibility_flags = ["nodejs_compat"]
