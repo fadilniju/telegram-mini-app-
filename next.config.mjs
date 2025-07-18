@@ -10,8 +10,8 @@ const nextConfig = {
                 pathname: '/prompt/**',
             },
             {
-                // This is for the fallback developer avatar I added.
-                protocol: 'https://',
+                // CORRECTED: The protocol should be 'https', not 'https://'.
+                protocol: 'https',
                 hostname: 'placehold.co',
                 port: '',
                 pathname: '/**',
