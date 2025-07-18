@@ -42,13 +42,19 @@ declare global {
   }
 }
 
+// Type for a generated image, including a unique ID
+type GeneratedImage = {
+  id: string;
+  url: string;
+};
+
 export default function ExampleProfile() {
   // State variables for the application
-  const [activeTab, setActiveTab] = useState('generator') // Start on the generator tab for quick access
+  const [activeTab, setActiveTab] = useState('generator')
   const [modelSize, setModelSize] = useState('512x512')
   const [imageCount, setImageCount] = useState(1)
   const [prompt, setPrompt] = useState('')
-  const [generationModel, setGenerationModel] = useState('pollinations') // Default model
+  const [generationModel, setGenerationModel] = useState('pollinations')
   const [nftActiveTab, setNftActiveTab] = useState('collection')
   const [user, setUser] = useState<{
     first_name: string;
@@ -59,23 +65,22 @@ export default function ExampleProfile() {
   const [level] = useState(0)
   const [experience] = useState(0)
   const [isLoading, setIsLoading] = useState(false);
-  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  // State now holds an array of GeneratedImage objects
+  const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const [imagesGeneratedCount, setImagesGeneratedCount] = useState(0);
 
   // Effect to initialize the Telegram Web App and fetch user data
   useEffect(() => {
-    if (window.Telegram && window.Telegram.WebApp) {
+    // Check if running inside Telegram
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
       window.Telegram.WebApp.ready();
-      const telegramUser = window.Telegram.WebApp.initDataUnsafe?.user;
+      const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
       if (telegramUser) {
         setUser(telegramUser);
-      } else {
-        // Fallback for development outside the Telegram environment
-        setUser({ first_name: "Dev", last_name: "User", username: "devuser", photo_url: `https://placehold.co/128x128/94a3b8/ffffff?text=DU` });
       }
     } else {
-      console.error('Telegram WebApp is not available.');
       // Fallback for development outside the Telegram environment
+      console.error('Telegram WebApp is not available.');
       setUser({ first_name: "Dev", last_name: "User", username: "devuser", photo_url: `https://placehold.co/128x128/94a3b8/ffffff?text=DU` });
     }
   }, []);
@@ -84,23 +89,22 @@ export default function ExampleProfile() {
    * Handles the image generation process by calling the Pollinations.ai API.
    */
   const handleGenerate = () => {
-    if (!prompt || isLoading) return; // Prevent generation if prompt is empty or already loading
+    if (!prompt || isLoading) return;
     setIsLoading(true);
     
     const [width, height] = modelSize.split('x');
     
-    // Create an array of image URLs to be generated
-    const newImageUrls = Array.from({ length: imageCount }, () => {
-      const seed = Math.floor(Math.random() * 1000000); // Use a random seed for image variety
-      // Construct the API URL as per the cheatsheet
-      return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
+    // Create an array of new image objects with unique IDs
+    const newImages: GeneratedImage[] = Array.from({ length: imageCount }, () => {
+      const seed = Math.floor(Math.random() * 1000000);
+      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
+      return { id: crypto.randomUUID(), url }; // Use crypto.randomUUID() for a guaranteed unique key
     });
     
-    setGeneratedImages(newImageUrls);
-    setImagesGeneratedCount(prev => prev + newImageUrls.length);
+    // Add new images to the beginning of the existing list
+    setGeneratedImages(prevImages => [...newImages, ...prevImages]);
+    setImagesGeneratedCount(prev => prev + newImages.length);
     
-    // Set loading to false after a short delay. This gives the browser time to
-    // start fetching the images. The user will see the browser's native image loading indicator.
     setTimeout(() => setIsLoading(false), 1000); 
   };
   
@@ -212,11 +216,11 @@ export default function ExampleProfile() {
                 </h3>
                 {generatedImages.length > 0 ? (
                   <div className="grid grid-cols-2 gap-4">
-                    {generatedImages.map((image, index) => (
+                    {generatedImages.map((image) => (
                       <Image
-                        key={index}
-                        src={image}
-                        alt={`Сгенерированное изображение ${index + 1}`}
+                        key={image.id}
+                        src={image.url}
+                        alt={`Сгенерированное изображение ${image.id}`}
                         width={256}
                         height={256}
                         className="w-full h-auto rounded-lg shadow-md"
@@ -303,11 +307,11 @@ export default function ExampleProfile() {
                 )}
                 {!isLoading && generatedImages.length > 0 && (
                   <div className="grid grid-cols-2 gap-4">
-                    {generatedImages.map((image, index) => (
+                    {generatedImages.slice(0, imageCount).map((image) => (
                       <Image
-                        key={index}
-                        src={image}
-                        alt={`Сгенерированное изображение ${index + 1}`}
+                        key={image.id}
+                        src={image.url}
+                        alt={`Сгенерированное изображение ${image.id}`}
                         width={256}
                         height={256}
                         className="w-full h-auto rounded-lg shadow-md bg-gray-200"
