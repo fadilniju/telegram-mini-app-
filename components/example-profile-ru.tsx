@@ -216,7 +216,6 @@ export default function ExampleProfile() {
                       <Image
                         key={index}
                         src={image}
-                        unoptimized // Required for external image URLs in Next.js
                         alt={`Сгенерированное изображение ${index + 1}`}
                         width={256}
                         height={256}
@@ -308,7 +307,6 @@ export default function ExampleProfile() {
                       <Image
                         key={index}
                         src={image}
-                        unoptimized
                         alt={`Сгенерированное изображение ${index + 1}`}
                         width={256}
                         height={256}
