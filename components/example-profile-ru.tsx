@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Star, Zap, User, ShoppingBag, Image as ImageIcon, Palette, Search, Gift } from 'lucide-react'
+import { Star, Zap, User, ShoppingBag, Image as ImageIcon, Palette, Search, Gift, Loader2 } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
@@ -22,6 +22,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
+// Telegram WebApp types for interacting with the Telegram client
 declare global {
   interface Window {
     Telegram: {
@@ -34,72 +35,100 @@ declare global {
             photo_url?: string;
           };
         };
+        // Call this method when the app is ready to be displayed.
+        ready: () => void;
       };
     };
   }
 }
 
 export default function ExampleProfile() {
-  const [activeTab, setActiveTab] = useState('profile')
+  // State variables for the application
+  const [activeTab, setActiveTab] = useState('generator') // Start on the generator tab for quick access
   const [modelSize, setModelSize] = useState('512x512')
   const [imageCount, setImageCount] = useState(1)
   const [prompt, setPrompt] = useState('')
-  const [generationModel, setGenerationModel] = useState('stable-diffusion')
+  const [generationModel, setGenerationModel] = useState('pollinations') // Default model
   const [nftActiveTab, setNftActiveTab] = useState('collection')
   const [user, setUser] = useState<{
-  first_name: string;
-  last_name?: string;
-  username?: string;
-  photo_url?: string;
-} | null>(null);
+    first_name: string;
+    last_name?: string;
+    username?: string;
+    photo_url?: string;
+  } | null>(null);
   const [level] = useState(0)
   const [experience] = useState(0)
+  const [isLoading, setIsLoading] = useState(false);
+  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [imagesGeneratedCount, setImagesGeneratedCount] = useState(0);
 
- useEffect(() => {
-  // Проверяем, существует ли объект Telegram и его свойства перед их использованием
-  if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
-    const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
-    if (telegramUser) {
-      setUser(telegramUser);
+  // Effect to initialize the Telegram Web App and fetch user data
+  useEffect(() => {
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      const telegramUser = window.Telegram.WebApp.initDataUnsafe?.user;
+      if (telegramUser) {
+        setUser(telegramUser);
+      } else {
+        // Fallback for development outside the Telegram environment
+        setUser({ first_name: "Dev", last_name: "User", username: "devuser", photo_url: `https://placehold.co/128x128/94a3b8/ffffff?text=DU` });
+      }
+    } else {
+      console.error('Telegram WebApp is not available.');
+      // Fallback for development outside the Telegram environment
+      setUser({ first_name: "Dev", last_name: "User", username: "devuser", photo_url: `https://placehold.co/128x128/94a3b8/ffffff?text=DU` });
     }
-  } else {
-    console.error('Telegram WebApp is not available or initDataUnsafe is undefined.');
-  }
-}, []);
+  }, []);
 
-
-  const generatedImages = [
-    "/placeholder.svg?height=100&width=100&text=Изображение1",
-    "/placeholder.svg?height=100&width=100&text=Изображение2",
-    "/placeholder.svg?height=100&width=100&text=Изображение3",
-    "/placeholder.svg?height=100&width=100&text=Изображение4",
-  ];
-
+  /**
+   * Handles the image generation process by calling the Pollinations.ai API.
+   */
+  const handleGenerate = () => {
+    if (!prompt || isLoading) return; // Prevent generation if prompt is empty or already loading
+    setIsLoading(true);
+    
+    const [width, height] = modelSize.split('x');
+    
+    // Create an array of image URLs to be generated
+    const newImageUrls = Array.from({ length: imageCount }, () => {
+      const seed = Math.floor(Math.random() * 1000000); // Use a random seed for image variety
+      // Construct the API URL as per the cheatsheet
+      return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
+    });
+    
+    setGeneratedImages(newImageUrls);
+    setImagesGeneratedCount(prev => prev + newImageUrls.length);
+    
+    // Set loading to false after a short delay. This gives the browser time to
+    // start fetching the images. The user will see the browser's native image loading indicator.
+    setTimeout(() => setIsLoading(false), 1000); 
+  };
+  
+  // Placeholder data for NFT sections
   const nftCollection = [
     { id: 1, name: "Космический Тонкот", price: "10 TON", category: "Искусство" },
     { id: 2, name: "Цифровой Тонпейзаж", price: "5 TON", category: "Пейзажи" },
-    { id: 3, name: "ТОНстрактное искусство", price: "15 TON", category: "Абстракция" },
-    { id: 4, name: "ТОНкен", price: "8 TON", category: "Коллекционные" },
   ];
 
   const nftMarketplace = [
     { id: 1, name: "Золотой ТОНкоин", price: "20 TON", creator: "cryptoartist" },
     { id: 2, name: "ТОНмонавт", price: "30 TON", creator: "spaceexplorer" },
-    { id: 3, name: "ТОНландия", price: "25 TON", creator: "digitalworld" },
-    { id: 4, name: "КриптоТОНчик", price: "15 TON", creator: "nftmaster" },
-    { id: 5, name: "ТОНовая Волна", price: "18 TON", creator: "artwave" },
   ];
 
   const dailyRewards = [
-    { day: 1, reward: "50 очков опыта" },
-    { day: 2, reward: "100 очков опыта" },
-    { day: 3, reward: "1 бесплатная генерация" },
-    { day: 4, reward: "200 очков опыта" },
-    { day: 5, reward: "2 бесплатные генерации" },
-    { day: 6, reward: "300 очков опыта" },
-    { day: 7, reward: "1 случайный NFT" },
+    { day: 1, reward: "50 очков" },
+    { day: 2, reward: "100 очков" },
+    { day: 3, reward: "1 генерация" },
+    { day: 4, reward: "200 очков" },
+    { day: 5, reward: "2 генерации" },
+    { day: 6, reward: "300 очков" },
+    { day: 7, reward: "1 NFT" },
   ];
 
+  /**
+   * Renders the content based on the currently active tab.
+   * @returns {React.ReactNode} The JSX for the active tab.
+   */
   const renderContent = () => {
     switch (activeTab) {
       case 'profile':
@@ -166,7 +195,7 @@ export default function ExampleProfile() {
                   </div>
                   <div className="flex justify-between">
                     <span>Сгенерировано изображений</span>
-                    <Badge variant="secondary" className="text-xs">0</Badge>
+                    <Badge variant="secondary" className="text-xs">{imagesGeneratedCount}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Куплено товаров</span>
@@ -181,18 +210,23 @@ export default function ExampleProfile() {
                   <ImageIcon className="w-6 h-6 mr-2 text-blue-500" />
                   Галерея
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {generatedImages.map((image, index) => (
-                    <Image 
-                      key={index} 
-                      src={image} 
-                      alt={`Сгенерированное изображение ${index + 1}`} 
-                      width={100} 
-                      height={100}
-                      className="w-full h-auto rounded-lg shadow-md" 
-                    />
-                  ))}
-                </div>
+                {generatedImages.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    {generatedImages.map((image, index) => (
+                      <Image
+                        key={index}
+                        src={image}
+                        unoptimized // Required for external image URLs in Next.js
+                        alt={`Сгенерированное изображение ${index + 1}`}
+                        width={256}
+                        height={256}
+                        className="w-full h-auto rounded-lg shadow-md"
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500">Ваша галерея пуста. Создайте свое первое изображение на вкладке "Генератор"!</p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -215,49 +249,77 @@ export default function ExampleProfile() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Промпт</label>
                   <Textarea
-                    placeholder="Опишите изображение, которое вы хотите сгенерировать"
+                    placeholder="Например: a cute cat wearing a wizard hat"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     className="w-full"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Модель генерации</label>
-                  <Select value={generationModel} onValueChange={setGenerationModel}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Модель</label>
+                  <Select value={generationModel} onValueChange={setGenerationModel} disabled>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Выберите модель генерации" />
+                      <SelectValue placeholder="Выберите модель" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="stable-diffusion">Stable Diffusion</SelectItem>
-                      <SelectItem value="dall-e">DALL-E</SelectItem>
-                      <SelectItem value="midjourney">Midjourney</SelectItem>
+                      <SelectItem value="pollinations">Pollinations AI</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-gray-500 mt-1">Другие модели будут добавлены в ближайшее время.</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Размер модели</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Размер</label>
                   <Select value={modelSize} onValueChange={setModelSize}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Выберите размер модели" />
+                      <SelectValue placeholder="Выберите размер" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="256x256">256x256</SelectItem>
                       <SelectItem value="512x512">512x512</SelectItem>
                       <SelectItem value="1024x1024">1024x1024</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Количество изображений: {imageCount}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Количество: {imageCount}</label>
                   <Slider
                     value={[imageCount]}
                     onValueChange={(value) => setImageCount(value[0])}
                     max={4}
+                    min={1}
                     step={1}
                     className="w-full"
                   />
                 </div>
-                <Button className="w-full" disabled={!prompt}>Создать новое изображение</Button>
+                <Button className="w-full" onClick={handleGenerate} disabled={!prompt || isLoading}>
+                  {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Генерация...</> : "Создать изображение"}
+                </Button>
+              </div>
+              {/* Results Section */}
+              <div className="mt-6">
+                <h4 className="text-lg font-semibold mb-4">Результат</h4>
+                {isLoading && (
+                  <div className="flex justify-center items-center p-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+                  </div>
+                )}
+                {!isLoading && generatedImages.length > 0 && (
+                  <div className="grid grid-cols-2 gap-4">
+                    {generatedImages.map((image, index) => (
+                      <Image
+                        key={index}
+                        src={image}
+                        unoptimized
+                        alt={`Сгенерированное изображение ${index + 1}`}
+                        width={256}
+                        height={256}
+                        className="w-full h-auto rounded-lg shadow-md bg-gray-200"
+                      />
+                    ))}
+                  </div>
+                )}
+                {!isLoading && generatedImages.length === 0 && (
+                   <p className="text-center text-gray-500">Здесь появятся ваши сгенерированные изображения.</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -303,7 +365,7 @@ export default function ExampleProfile() {
                           <div className="w-12 h-12 bg-gray-200 rounded-lg mr-4"></div>
                           <div>
                             <span className="font-medium">{item.name}</span>
-                            <p className="text-sm  text-gray-500">Создатель: {item.creator}</p>
+                            <p className="text-sm text-gray-500">Создатель: {item.creator}</p>
                           </div>
                         </div>
                         <Button size="sm">{item.price}</Button>
@@ -323,36 +385,37 @@ export default function ExampleProfile() {
   return (
     <div className="max-w-md mx-auto mt-4 p-4 bg-gray-50 min-h-screen">
       <div className="mb-20">{renderContent()}</div>
-      <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg">
+      {/* Bottom Navigation Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t">
         <div className="flex justify-around max-w-md mx-auto p-2">
           <Button
-            variant={activeTab === 'profile' ? 'default' : 'ghost'}
-            onClick={() => setActiveTab('profile')}
-            className="flex flex-col items-center"
-          >
-            <User className="h-6 w-6" />
-            <span className="text-xs mt-1">Профиль</span>
-          </Button>
-          <Button
-            variant={activeTab === 'store' ? 'default' : 'ghost'}
-            onClick={() => setActiveTab('store')}
-            className="flex flex-col items-center"
-          >
-            <ShoppingBag className="h-6 w-6" />
-            <span className="text-xs mt-1">Магазин</span>
-          </Button>
-          <Button
-            variant={activeTab === 'generator' ? 'default' : 'ghost'}
+            variant={activeTab === 'generator' ? 'secondary' : 'ghost'}
             onClick={() => setActiveTab('generator')}
-            className="flex flex-col items-center"
+            className="flex flex-col items-center h-auto py-2"
           >
             <ImageIcon className="h-6 w-6" />
             <span className="text-xs mt-1">Генератор</span>
           </Button>
           <Button
-            variant={activeTab === 'nft' ? 'default' : 'ghost'}
+            variant={activeTab === 'profile' ? 'secondary' : 'ghost'}
+            onClick={() => setActiveTab('profile')}
+            className="flex flex-col items-center h-auto py-2"
+          >
+            <User className="h-6 w-6" />
+            <span className="text-xs mt-1">Профиль</span>
+          </Button>
+          <Button
+            variant={activeTab === 'store' ? 'secondary' : 'ghost'}
+            onClick={() => setActiveTab('store')}
+            className="flex flex-col items-center h-auto py-2"
+          >
+            <ShoppingBag className="h-6 w-6" />
+            <span className="text-xs mt-1">Магазин</span>
+          </Button>
+          <Button
+            variant={activeTab === 'nft' ? 'secondary' : 'ghost'}
             onClick={() => setActiveTab('nft')}
-            className="flex flex-col items-center"
+            className="flex flex-col items-center h-auto py-2"
           >
             <Palette className="h-6 w-6" />
             <span className="text-xs mt-1">NFT</span>
